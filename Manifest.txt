@@ -1,8 +1,10 @@
 .autotest
+.gitignore
 History.txt
 Manifest.txt
-README.txt
+README.rdoc
 Rakefile
-bin/rack/cas_client
+bin/rack_cas_client
 lib/rack/cas_client.rb
-test/test_rack/cas_client.rb
+test/helper.rb
+test/test_rack_cas_client.rb
