@@ -30,7 +30,7 @@ A Rack Middleware component to authenticate against a CAS server.
       response = Rack::Response.new
 
       user = request.session[:cas_user]
-      unless user
+      unless user and not user.empty?
         query = URI.encode_www_form url: request.url
         response.redirect "/login?#{query}"
         return response.finish
