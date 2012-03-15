@@ -4,8 +4,26 @@ class TestRack::TestCASClient
 
   def test_all_ready_authd
     @session[:cas_user] = {'username' => 'me'}
-    get '/', {}, @env
+    get '/', nil, @env
     assert_equal @session[:cas_user].to_json, last_response.body
+  end
+
+  def test_all_ready_authd_with_no_app
+    @app = Rack::CASClient.new nil, cas_base_url: 'http://example/cas'
+
+    @session[:cas_user] = {'username' => 'me'}
+    get '/', nil, @env
+    assert last_response.ok?
+    assert_equal 'logged in!', last_response.body
+  end
+
+  def test_all_ready_authd_with_no_app_redirects_if_given_url
+    @app = Rack::CASClient.new nil, cas_base_url: 'http://example/cas'
+
+    @session[:cas_user] = {'username' => 'me'}
+    get '/?url=http%3A%2F%2Fexample%2Ffoo', nil, @env
+    assert last_response.redirect?
+    assert_equal 'http://example/foo', last_response['Location']
   end
 
   def test_redirects_to_cas_server

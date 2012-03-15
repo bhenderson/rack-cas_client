@@ -1,6 +1,9 @@
 require 'rack/request'
 require 'rubycas-client'
 
+# YUCK!
+require 'active_support/core_ext/object/blank'
+
 module Rack
   ##
   # Middleware component to authenticate with a CAS server.
@@ -24,9 +27,18 @@ module Rack
     end
 
     # Public: Accessor method for app.
+    #
+    # If app is nil, redirects back to the referrer, otherwise, just displays a
+    # simple page saying that login was successful.
     def app
       @app || lambda{|env|
-        [200, {'Content-Type'=>'text/plain'},['logged in']]}
+        req = Rack::Request.new env
+        if url = req.params['url'] and URI.unescape url
+          self.redirect url
+        else
+          [200, {'Content-Type'=>'text/plain'},['logged in!']]
+        end
+      }
     end
 
     # Public: Rack interface.
@@ -106,7 +118,8 @@ module Rack
       # I feel like this should be in Rack::Request
       # request['ticket'] = nil
       # request.url
-      url = request.base_url + request.path
+      url = request.referer || request.base_url + request.path
+      request.referer
       query = request.params.dup
       query.delete 'ticket'
       query.empty? ? url : "#{url}?#{Rack::Utils.build_nested_query query}"
