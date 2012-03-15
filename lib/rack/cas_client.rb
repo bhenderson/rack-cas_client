@@ -10,7 +10,7 @@ module Rack
   ##
   # Middleware component to authenticate with a CAS server.
   class CASClient
-    VERSION = '1.0.0'
+    VERSION = '0.1.0'
 
     attr_reader :cas_client, :options, :request
 
