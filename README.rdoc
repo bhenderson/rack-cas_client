@@ -14,19 +14,34 @@ A Rack Middleware component to authenticate against a CAS server.
 
 == SYNOPSIS:
 
+  # config.ru
+
+  require 'rack/cas_client'
+
+  use Rack::Session::Cookie
+
   map '/login' do
-    run Rack::CASClient.new, :cas_base_url => 'http://example/cas'
+    run Rack::CASClient.new nil, :cas_base_url => 'https://example/cas'
   end
 
   class MyApp < Struct.new(:app)
     def call(env)
-      if request.session[:cas_user].empty?
-        redirect '/login'
+      request = Rack::Request.new env
+      response = Rack::Response.new
+
+      user = request.session[:cas_user]
+      unless user
+        query = URI.encode_www_form url: request.url
+        response.redirect "/login?#{query}"
+        return response.finish
       end
 
-      [200, {}, ["hi #{request.session[:cas_user][:username]}"]]
+      response.write "hi #{user.inspect}"
+      response.finish
     end
   end
+
+  run MyApp.new
 
 == REQUIREMENTS:
 
