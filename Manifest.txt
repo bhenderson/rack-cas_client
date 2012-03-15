@@ -1,0 +1,8 @@
+.autotest
+History.txt
+Manifest.txt
+README.txt
+Rakefile
+bin/rack/cas_client
+lib/rack/cas_client.rb
+test/test_rack/cas_client.rb
