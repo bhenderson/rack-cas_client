@@ -1,8 +1,10 @@
 require 'rack/request'
 require 'rubycas-client'
 
-# YUCK!
+# YUCK! These are required for casclient
 require 'active_support/core_ext/object/blank'
+require 'yaml'
+require 'json'
 
 module Rack
   ##
