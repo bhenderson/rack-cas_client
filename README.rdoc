@@ -1,26 +1,41 @@
 = rack-cas_client
 
-* FIX (url)
+* https://github.com/bhenderson/rack-cas_client
 
 == DESCRIPTION:
 
-FIX (describe your package)
+A Rack Middleware component to authenticate against a CAS server.
 
 == FEATURES/PROBLEMS:
 
-* FIX (list of features or problems)
+* Tries to be a simple authentication mechanism and leaves it up to the app to determine endpoints that should be auth'd.
+* Does not depend on Sinatra or Rails.
+* Does use 'rack.session' so anything that uses that will work.
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+  map '/login' do
+    run Rack::CASClient.new, :cas_base_url => 'http://example/cas'
+  end
+
+  class MyApp < Struct.new(:app)
+    def call(env)
+      if request.session[:cas_user].empty?
+        redirect '/login'
+      end
+
+      [200, {}, ["hi #{request.session[:cas_user][:username]}"]]
+    end
+  end
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+* rack
+* rubycas-client
 
 == INSTALL:
 
-* FIX gem install rack-cas_client
+* gem install rack-cas_client
 
 == DEVELOPERS:
 
