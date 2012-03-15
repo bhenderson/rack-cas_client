@@ -2,52 +2,63 @@ require 'rack/request'
 require 'rubycas-client'
 
 module Rack
+  ##
+  # Middleware component to authenticate with a CAS server.
   class CASClient
     VERSION = '1.0.0'
 
-    attr_reader :client, :options, :request
+    attr_reader :cas_client, :options, :request
 
     ##
     # options - Hash
-    #           logger - Symbol, must respond to :<<
-    #           verify_ssl - Bool, force ssl verification?
-    #           cas_base_url - String, your CAS Server base url.
+    #           :logger - Logger, must respond to :<<
+    #           :verify_ssl - Bool, force ssl verification? Defaults to true.
+    #           :cas_base_url - String, your CAS Server base url. raises if not there.
     def initialize app = nil, opts = {}
       @app = app
       @options = opts
-      @client = ::CASClient::Client.new(
-        cas_base_url:           options[:cas_base_url],
-        force_ssl_verification: options[:verify_ssl]
+      @cas_client = ::CASClient::Client.new(
+        cas_base_url:           options.fetch(:cas_base_url),
+        force_ssl_verification: options.fetch(:verify_ssl, true)
       )
     end
 
+    # Public: Accessor method for app.
     def app
       @app || lambda{|env|
         [200, {'Content-Type'=>'text/plain'},['logged in']]}
     end
 
+    # Public: Rack interface.
     def call env
       dup.call! env
     end
 
+    # Private: Rack call method.
+    #
+    # Calls +app+ if already authenticated.
+    #
+    # If not authenticated, redirects user to login server.
+    # Login server should redirect back with a ticket param.
+    # If ticket is valid, redirect back to original request.
     def call! env
       @request = Rack::Request.new env
 
       return app.call(env) if authenticated?
 
       service_url = request_url_without_ticket
-      cas_login_url = client.add_service_to_login_url(service_url)
+      cas_login_url = cas_client.add_service_to_login_url(service_url)
 
       if st = service_ticket(service_url)
 
-        client.validate_service_ticket(st) unless st.has_been_validated?
+        cas_client.validate_service_ticket(st) unless st.has_been_validated?
 
         if st.is_valid?
           log 'ticket is valid'
           # use string because extra_attributes will always have strings as keys
           user['username'] = st.user
           user.merge!        st.extra_attributes || {}
-          log "user logged as #{user.inspect}"
+          log "user logged in as #{user.inspect}"
           redirect service_url
         else
           log 'ticket is not valid'

@@ -1,10 +1,11 @@
 require 'helper'
 
 class TestRack::TestCASClient
+
   def test_all_ready_authd
     @session[:cas_user] = {'username' => 'me'}
     get '/', {}, @env
-    assert_equal '{"username":"me"}', last_response.body
+    assert_equal @session[:cas_user].to_json, last_response.body
   end
 
   def test_redirects_to_cas_server
@@ -50,7 +51,7 @@ class TestRack::TestCASClient
   def test_ticket_validation
     expected = 'http://example.org/foo'
 
-    cli = @client.client
+    cli = @client.cas_client
     def cli.validate_service_ticket(t)
       def t.is_valid?() true end
       def t.user() 'me' end
@@ -67,7 +68,7 @@ class TestRack::TestCASClient
   def test_ticket_in_valid
     expected = 'http://example/cas/login?service=http%3A%2F%2Fexample.org%2Ffoo'
 
-    cli = @client.client
+    cli = @client.cas_client
     def cli.validate_service_ticket(t)
       def t.is_valid?() false end
     end
