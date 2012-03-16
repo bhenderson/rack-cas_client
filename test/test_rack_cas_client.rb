@@ -73,8 +73,8 @@ class TestRack::TestCASClient
 
     cli = @client.cas_client
     def cli.validate_service_ticket(t)
-      def t.is_valid?() true end
-      def t.user() 'me' end
+      t.success = true
+      t.user = 'me'
     end
 
     get '/foo?ticket=ST-123', nil, @env
@@ -85,12 +85,12 @@ class TestRack::TestCASClient
     assert_equal expected, @session[:cas_user]
   end
 
-  def test_ticket_in_valid
+  def test_ticket_invalid
     expected = 'http://example/cas/login?service=http%3A%2F%2Fexample.org%2Ffoo'
 
     cli = @client.cas_client
     def cli.validate_service_ticket(t)
-      def t.is_valid?() false end
+      t.success = false
     end
 
     get '/foo?ticket=ST-123'
