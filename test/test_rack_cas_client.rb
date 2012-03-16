@@ -46,6 +46,8 @@ class TestRack::TestCASClient
     assert_request_url_without_ticket '/?bar=foo', '/?ticket=123&bar=foo'
     assert_request_url_without_ticket '/?foo=bar&bar=foo', '/?foo=bar&ticket=123&bar=foo'
     assert_request_url_without_ticket '/?foo=bar&bar=foo', '/?foo=bar&bar=foo'
+    assert_request_url_without_ticket '/foo', '/foo?ticket=123'
+    assert_request_url_without_ticket '/foo/', '/foo/?ticket=123'
   end
 
   def test_service_ticket

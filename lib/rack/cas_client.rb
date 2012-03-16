@@ -105,6 +105,8 @@ module Rack
       return true unless logger = options[:logger]
 
       logger << msg
+      logger << "\n" unless msg["\n"]
+      true
     end
 
     def redirect loc
