@@ -1,34 +1,44 @@
 require 'rack/request'
 require 'rubycas-client'
 
-# YUCK! These are required for casclient
-require 'active_support/core_ext/object/blank'
-require 'yaml'
-require 'json'
-
 module Rack
   ##
   # Middleware component to authenticate with a CAS server.
   class CASClient
     VERSION = '0.1.0'
 
-    attr_reader :cas_client, :options, :request
-
-    ##
-    # options - Hash
-    #           :logger - Logger, must respond to :<<
-    #           :verify_ssl - Bool, force ssl verification? Defaults to true.
-    #           :cas_base_url - String, your CAS Server base url. raises if not there.
-    def initialize app = nil, opts = {}
-      @app = app
-      @options = opts
-      @cas_client = ::CASClient::Client.new(
-        cas_base_url:           options.fetch(:cas_base_url),
-        force_ssl_verification: options.fetch(:verify_ssl, true)
-      )
+    # Public: CASCLient depends on these things but does not explicitely require them.
+    # Call this method (before any forking) if you care. (You may not if you
+    # implement your own #blank? for example.)
+    def self.require_casclient_deps
+      # YUCK! These are required for casclient
+      require 'active_support/core_ext/object/blank'
+      # I believe one or the other of these is required (not both) but since
+      # they're stdlib I'm leaving them in.
+      require 'json'
+      require 'yaml'
     end
 
-    # Public: Accessor method for app.
+    attr_reader :cas_client, :request
+
+    # options - Hash
+    #           :logger - Logger, must respond to :<<
+    #           Everything else is used by CASClient::Client#configure. Notable params are:
+    #           :cas_base_url - String, your CAS Server base url. raises if not there.
+    #           :force_ssl_verification - Bool, force ssl verification? Defaults to true.
+    def initialize app = nil, opts = {}
+      @app = app
+
+      # quiet cas_client
+      @logger = opts.delete :logger
+      raise ArgumentError, "invalid logger #{@logger}" if
+        @logger and not @logger.respond_to? :<<
+
+      opts[:force_ssl_verification] = opts.fetch(:force_ssl_verification, true)
+      @cas_client = ::CASClient::Client.new opts
+    end
+
+    # Private: Accessor method for app.
     #
     # If app is nil, redirects back to the referrer, otherwise, just displays a
     # simple page saying that login was successful.
@@ -44,17 +54,19 @@ module Rack
     end
 
     # Public: Rack interface.
-    def call env
-      dup.call! env
-    end
-
-    # Private: Rack call method.
     #
     # Calls +app+ if already authenticated.
     #
     # If not authenticated, redirects user to login server.
     # Login server should redirect back with a ticket param.
     # If ticket is valid, redirect back to original request.
+    #
+    # It's up to the session manager to manage timeouts etc.
+    def call env
+      dup.call! env
+    end
+
+    # Private: Rack call method.
     def call! env
       @request = Rack::Request.new env
 
@@ -85,6 +97,9 @@ module Rack
       end
     end
 
+    # Private: Returns a ticket configured with +service_url+
+    #
+    # service_url - String, the request url that needs to be validated.
     def service_ticket service_url
       ticket = request.params['ticket']
       return unless ticket
@@ -102,10 +117,10 @@ module Rack
     end
 
     def log msg
-      return true unless logger = options[:logger]
+      return true unless @logger
 
-      logger << msg
-      logger << "\n" unless msg["\n"]
+      @logger << msg
+      @logger << "\n" unless msg["\n"]
       true
     end
 
@@ -134,7 +149,8 @@ module Rack
     end
 
     def user
-      session[:cas_user] ||= {}
+      # session[:cas_user]
+      session[@cas_client.username_session_key] ||= {}
     end
 
   end
