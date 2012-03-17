@@ -8,9 +8,10 @@ A Rack Middleware component to authenticate against a CAS server.
 
 == FEATURES/PROBLEMS:
 
-* Tries to be a simple authentication mechanism and leaves it up to the app to determine endpoints that should be auth'd.
+* Tries to be a simple authentication mechanism and leaves it up to the app chain to determine endpoints that should be auth'd.
 * Does not depend on Sinatra or Rails.
 * Does use 'rack.session' so anything that uses that will work.
+* Passes options hash to CASClient::Client (see docs for exceptions)
 
 == SYNOPSIS:
 
