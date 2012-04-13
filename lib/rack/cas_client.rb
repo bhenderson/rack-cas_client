@@ -150,7 +150,7 @@ module Rack
 
     def user
       # session[:cas_user]
-      session[@cas_client.username_session_key] ||= {}
+      session[cas_client.username_session_key] ||= {}
     end
 
   end
