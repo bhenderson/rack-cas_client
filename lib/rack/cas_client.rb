@@ -45,7 +45,7 @@ module Rack
     def app
       @app || lambda{|env|
         req = Rack::Request.new env
-        if url = req.params['url'] and URI.unescape url
+        if url = req.params['url']
           self.redirect url
         else
           [200, {'Content-Type'=>'text/plain'},['logged in!']]
@@ -137,8 +137,7 @@ module Rack
       # I feel like this should be in Rack::Request
       # request['ticket'] = nil
       # request.url
-      url = request.referer || request.base_url + request.path
-      request.referer
+      url = request.base_url + request.path
       query = request.params.dup
       query.delete 'ticket'
       query.empty? ? url : "#{url}?#{Rack::Utils.build_nested_query query}"
