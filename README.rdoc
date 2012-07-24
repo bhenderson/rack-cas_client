@@ -6,6 +6,11 @@
 
 A Rack Middleware component to authenticate against a CAS server.
 
+I (shamefully) forgot to attribute this to
+https://github.com/garnieretienne/rubycas-client-sinatra. I had reached out to
+garnieretienne and he was no longer interested in his project. There is also
+rack-cas-client gem but that was too rails focused for me.
+
 == FEATURES/PROBLEMS:
 
 * Tries to be a simple authentication mechanism and leaves it up to the app chain to determine endpoints that should be auth'd.

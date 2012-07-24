@@ -6,6 +6,8 @@ require 'hoe'
 Hoe.plugin :isolate
 Hoe.plugin :minitest
 
+Hoe.plugin :version, :git
+
 Hoe.spec 'rack-cas_client' do
   developer 'Brian Henderson', 'henderson.bj@gmail.com'
 
