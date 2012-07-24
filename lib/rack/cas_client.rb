@@ -5,7 +5,7 @@ module Rack
   ##
   # Middleware component to authenticate with a CAS server.
   class CASClient
-    VERSION = '0.2.0'
+    VERSION = '0.3.0'
 
     # Public: CASCLient depends on these things but does not explicitely require them.
     # Call this method (before any forking) if you care. (You may not if you
